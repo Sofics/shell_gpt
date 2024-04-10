@@ -34,8 +34,6 @@ DEFAULT_CONFIG = {
     "API_BASE_URL": os.getenv("API_BASE_URL", "default"),
     "PRETTIFY_MARKDOWN": os.getenv("PRETTIFY_MARKDOWN", "true"),
     "USE_LITELLM": os.getenv("USE_LITELLM", "false"),
-    "DEFAULT_TEMPERATURE": os.getenv("DEFAULT_TEMPERATURE", "0.0"),
-    "DEFAULT_TOP_P": os.getenv("DEFAULT_TOP_P", "1.0"),
     "IN_CONTAINER": os.getenv("IN_CONTAINER", "false"),
     "OS_OUTSIDE_CONTAINER": os.getenv("OS_OUTSIDE_CONTAINER", "Linux/Debian 12 (bookworm)"),
     "SHELL_OUTSIDE_CONTAINER": os.getenv("SHELL_OUTSIDE_CONTAINER", "/bin/bash"),
