@@ -62,7 +62,7 @@ class SystemRole:
     @classmethod
     def create_defaults(cls) -> None:
         cls.storage.parent.mkdir(parents=True, exist_ok=True)
-        if cfg.get("IN_CONTAINER") is False:
+        if cfg.get("IN_CONTAINER") != "true":
             variables = {"shell": cls._shell_name(), "os": cls._os_name()}
         else:  # running in container
             variables = {"shell": cfg.get("SHELL_OUTSIDE_CONTAINER"), "os": cfg.get("OS_OUTSIDE_CONTAINER")}
