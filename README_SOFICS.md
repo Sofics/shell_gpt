@@ -1,0 +1,21 @@
+# ShellGPT implemented on Seabert
+
+changed to custsoft (has deploy ssh key)
+cloned repo into /opt/Sofics/shell_gpt
+
+git fetch
+git checkout origin/sofics
+
+su localadmin
+sudo /opt/Sofics/fix_permissions.sh
+
+new docker image can be build inside of /opt/Sofics/shell_gpt with:
+docker build -t shellgpt . --no-cache
+
+image is named shellgpt
+
+alias added to /etc/bashrc:
+alias sgpt="docker run -it --rm --volume /opt/Sofics/shell_gpt/gpt-cache:/tmp/shell_gpt shellgpt"
+
+if people want to be able to use sgpt, then need to reload bashrc first:
+source /etc/bashrc
