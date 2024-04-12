@@ -15,7 +15,7 @@ docker build -t shellgpt . --no-cache
 image is named shellgpt
 
 alias added to /etc/bashrc:
-alias sgpt="docker run -it --rm --volume /opt/Sofics/shell_gpt/gpt-cache:/tmp/shell_gpt shellgpt"
+alias sgpt="docker run --rm --volume /opt/Sofics/shell_gpt/gpt-cache:/tmp/shell_gpt shellgpt"
 
 if people want to be able to use sgpt, then need to reload bashrc first:
 source /etc/bashrc
