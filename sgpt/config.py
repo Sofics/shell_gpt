@@ -22,7 +22,7 @@ DEFAULT_CONFIG = {
     "CHAT_CACHE_LENGTH": int(os.getenv("CHAT_CACHE_LENGTH", "100")),
     "CACHE_LENGTH": int(os.getenv("CHAT_CACHE_LENGTH", "100")),
     "REQUEST_TIMEOUT": int(os.getenv("REQUEST_TIMEOUT", "60")),
-    "DEFAULT_MODEL": os.getenv("DEFAULT_MODEL", "gpt-4-1106-preview"),
+    "DEFAULT_MODEL": os.getenv("DEFAULT_MODEL", "gpt-4o"),
     "DEFAULT_COLOR": os.getenv("DEFAULT_COLOR", "magenta"),
     "ROLE_STORAGE_PATH": os.getenv("ROLE_STORAGE_PATH", str(ROLE_STORAGE_PATH)),
     "DEFAULT_EXECUTE_SHELL_CMD": os.getenv("DEFAULT_EXECUTE_SHELL_CMD", "false"),
@@ -34,9 +34,9 @@ DEFAULT_CONFIG = {
     "API_BASE_URL": os.getenv("API_BASE_URL", "default"),
     "PRETTIFY_MARKDOWN": os.getenv("PRETTIFY_MARKDOWN", "true"),
     "USE_LITELLM": os.getenv("USE_LITELLM", "false"),
-    "IN_CONTAINER": os.getenv("IN_CONTAINER", "false"),
-    "OS_OUTSIDE_CONTAINER": os.getenv("OS_OUTSIDE_CONTAINER", "Linux/Debian 12 (bookworm)"),
-    "SHELL_OUTSIDE_CONTAINER": os.getenv("SHELL_OUTSIDE_CONTAINER", "/bin/bash"),
+    "SHELL_INTERACTION ": os.getenv("SHELL_INTERACTION ", "true"),
+    "OS_NAME ": os.getenv("OS_NAME ", "auto"),
+    "SHELL_NAME  ": os.getenv("SHELL_NAME ", "auto"),
     # New features might add their own config variables here.
 }
 

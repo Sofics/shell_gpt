@@ -4,11 +4,9 @@ ENV DEFAULT_MODEL=ollama/mixtral:8x7b-instruct-v0.1-q3_K_L
 ENV API_BASE_URL=http://10.31.13.98:11434
 ENV DEFAULT_COLOR=yellow
 ENV USE_LITELLM=true
-ENV OPENAI_API_KEY=bad_key
-ENV PRETTIFY_MARKDOWN=false
-
-ENV IN_CONTAINER=true
-ENV OS_OUTSIDE_CONTAINER="Linux/Red Hat Enterprise Linux 8.8 (Ootpa)"
+ENV SHELL_INTERACTION=false
+ENV OS_NAME =auto
+ENV SHELL_NAME =auto
 
 WORKDIR /app
 COPY . /app

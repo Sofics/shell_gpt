@@ -285,7 +285,7 @@ The snippet of code you've provided is written in Python. It prompts the user...
 ```
 
 ### Function calling  
-[Function calls](https://platform.openai.com/docs/guides/function-calling) is a powerful feature OpenAI provides. It allows LLM to execute functions in your system, which can be used to accomplish a variety of tasks. To install [default functions](https://github.com/TheR1D/shell_gpt/tree/main/sgpt/default_functions/) run:
+[Function calls](https://platform.openai.com/docs/guides/function-calling) is a powerful feature OpenAI provides. It allows LLM to execute functions in your system, which can be used to accomplish a variety of tasks. To install [default functions](https://github.com/TheR1D/shell_gpt/tree/main/sgpt/llm_functions/) run:
 ```shell
 sgpt --install-functions
 ```
@@ -395,7 +395,7 @@ CACHE_PATH=/tmp/shell_gpt/cache
 # Request timeout in seconds.
 REQUEST_TIMEOUT=60
 # Default OpenAI model to use.
-DEFAULT_MODEL=gpt-3.5-turbo
+DEFAULT_MODEL=gpt-4o
 # Default color for shell and code completions.
 DEFAULT_COLOR=magenta
 # When in --shell mode, default to "Y" for no input.
@@ -422,7 +422,7 @@ Possible options for `CODE_THEME`: https://pygments.org/styles/
 │   prompt      [PROMPT]  The prompt to generate completions for.                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --model            TEXT                       Large language model to use. [default: gpt-4-1106-preview] │
+│ --model            TEXT                       Large language model to use. [default: gpt-4o]             │
 │ --temperature      FLOAT RANGE [0.0<=x<=2.0]  Randomness of generated output. [default: 0.0]             │
 │ --top-p            FLOAT RANGE [0.0<=x<=1.0]  Limits highest probable tokens (words). [default: 1.0]     │
 │ --md             --no-md                      Prettify markdown output. [default: md]                    │
@@ -461,18 +461,37 @@ docker run --rm \
        ghcr.io/ther1d/shell_gpt --chat rainbow "what are the colors of a rainbow"
 ```
 
+When using a container, please note:
+* The \[E\]xecute option for --shell with interaction will not work, since it would try this Execute in the docker container.  
+=> setting the `SHELL_INTERACTION` environment variable to false , makes sense.
+* Since, most likely the os and shell of your container are not identical to the environment you want help with:  
+set the environment variables `OS_NAME ` and `SHELL_NAME ` according to your setup.
+
+
 Example of a conversation, using an alias and the `OPENAI_API_KEY` environment variable:
 ```shell
-alias sgpt="docker run --rm --env OPENAI_API_KEY --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
+alias sgpt="docker run --rm --volume gpt-cache:/tmp/shell_gpt --env OS_NAME =$(uname -s) --env SHELL_NAME =$(echo $SHELL) ghcr.io/ther1d/shell_gpt"
 export OPENAI_API_KEY="your OPENAI API key"
 sgpt --chat rainbow "what are the colors of a rainbow"
 sgpt --chat rainbow "inverse the list of your last answer"
 sgpt --chat rainbow "translate your last answer in french"
 ```
 
+Note: if you're on Linux, in order to get a more detailed os name, you could use:
+--env OS_NAME =$(grep -oP '^PRETTY_NAME="\K[^"]+' /etc/os-release)
+
 You also can use the provided `Dockerfile` to build your own image:
 ```shell
 docker build -t sgpt .
 ```
+
+Example environment variables for a working Ollama setup, using Docker:
+* ENV DEFAULT_MODEL=ollama/mistral:7b-instruct-v0.2-q4_K_M
+* ENV API_BASE_URL=http://10.10.10.10:11434
+* ENV USE_LITELLM=true
+* ENV OPENAI_API_KEY=bad_key
+* ENV SHELL_INTERACTION=false
+* ENV OS_NAME ="Linux/Red Hat Enterprise Linux 8.8 (Ootpa)"
+* ENV SHELL_NAME =/bin/bash
 
 Additional documentation: [Azure integration](https://github.com/TheR1D/shell_gpt/wiki/Azure), [Ollama integration](https://github.com/TheR1D/shell_gpt/wiki/Ollama).
