@@ -6,7 +6,8 @@ ENV DEFAULT_COLOR=yellow
 ENV USE_LITELLM=true
 ENV OPENAI_API_KEY=bad_key
 ENV SHELL_INTERACTION=false
-ENV OS_NAME=auto
+# OS_NAME set to the output of "grep -oP '^PRETTY_NAME="\K[^"]+' /etc/os-release"
+ENV OS_NAME="Red Hat Enterprise Linux 8.6 (Ootpa)"
 ENV SHELL_NAME=auto
 
 WORKDIR /app

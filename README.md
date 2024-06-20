@@ -476,9 +476,8 @@ sgpt --chat rainbow "what are the colors of a rainbow"
 sgpt --chat rainbow "inverse the list of your last answer"
 sgpt --chat rainbow "translate your last answer in french"
 ```
-
-Note: if you're on Linux, in order to get a more detailed os name, you could use:
---env OS_NAME=$(grep -oP '^PRETTY_NAME="\K[^"]+' /etc/os-release)
+Note:  
+Consider filling in a more specific OS_NAME instead of using $(uname -s)  
 
 You also can use the provided `Dockerfile` to build your own image:
 ```shell
