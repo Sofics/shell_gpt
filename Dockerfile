@@ -1,6 +1,6 @@
 FROM python:3-slim
 
-ENV DEFAULT_MODEL=ollama/mixtral:8x7b-instruct-v0.1-q3_K_L
+ENV DEFAULT_MODEL=ollama/deepseek-coder-v2:16b-lite-instruct-q5_K_M
 ENV API_BASE_URL=http://10.31.13.98:11434
 ENV DEFAULT_COLOR=yellow
 ENV USE_LITELLM=true
