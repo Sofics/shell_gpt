@@ -24,6 +24,11 @@ if use_litellm:
     completion = litellm.completion
     litellm.suppress_debug_info = True
     additional_kwargs.pop("api_key")
+
+    # Custom line to avoid
+    # LiteLLM:WARNING: litellm_logging.py:1294 - Model=coding:latest not found in completion cost map.
+    litellm.model_cost["coding:latest"] = {"input_cost_per_token": 0, "output_cost_per_token": 0}
+
 else:
     from openai import OpenAI
 
