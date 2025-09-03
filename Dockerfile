@@ -1,7 +1,7 @@
 FROM python:3-slim
 
 ENV DEFAULT_MODEL=ollama/coding:latest
-ENV API_BASE_URL=http://10.31.13.98:11434
+ENV API_BASE_URL=http://10.31.13.98:11436
 ENV DEFAULT_COLOR=yellow
 ENV USE_LITELLM=true
 ENV OPENAI_API_KEY=bad_key
