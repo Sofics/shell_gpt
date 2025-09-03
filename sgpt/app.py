@@ -7,6 +7,7 @@ import sys
 import typer
 from click import BadArgumentUsage
 from click.types import Choice
+from prompt_toolkit import PromptSession
 
 from sgpt.config import cfg
 from sgpt.function import get_openai_schemas
@@ -107,7 +108,6 @@ def main(
     show_chat: str = typer.Option(
         None,
         help="Show all messages from provided chat id.",
-        callback=ChatHandler.show_messages_callback,
         rich_help_panel="Chat Options",
     ),
     list_chats: bool = typer.Option(
@@ -183,6 +183,9 @@ def main(
             # Non-interactive shell.
             pass
 
+    if show_chat:
+        ChatHandler.show_messages(show_chat, md)
+
     if sum((shell, describe_shell, code)) > 1:
         raise BadArgumentUsage(
             "Only one of --shell, --describe-shell, and --code options can be used at a time."
@@ -235,10 +238,12 @@ def main(
             functions=function_schemas,
         )
 
+    session: PromptSession[str] = PromptSession()
+
     while shell and interaction:
         option = typer.prompt(
-            text="[E]xecute, [D]escribe, [A]bort",
-            type=Choice(("e", "d", "a", "y"), case_sensitive=False),
+            text="[E]xecute, [M]odify, [D]escribe, [A]bort",
+            type=Choice(("e", "m", "d", "a", "y"), case_sensitive=False),
             default="e" if cfg.get("DEFAULT_EXECUTE_SHELL_CMD") == "true" else "a",
             show_choices=False,
             show_default=False,
@@ -246,6 +251,9 @@ def main(
         if option in ("e", "y"):
             # "y" option is for keeping compatibility with old version.
             run_command(full_completion)
+        elif option == "m":
+            full_completion = session.prompt("", default=full_completion)
+            continue
         elif option == "d":
             DefaultHandler(DefaultRoles.DESCRIBE_SHELL.get_role(), md).handle(
                 full_completion,
