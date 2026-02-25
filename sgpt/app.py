@@ -54,7 +54,7 @@ def main(
         False,
         "--shell",
         "-s",
-        help="Generate and execute shell commands.",
+        help="Generate shell commands.",
         rich_help_panel="Assistance Options",
     ),
     interaction: bool = typer.Option(
