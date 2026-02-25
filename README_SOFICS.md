@@ -37,6 +37,7 @@ sgpt() {
     pushd /opt/Sofics > /dev/null || return 1
     local exit_code
     sudo -u podman-shared /usr/bin/podman run \
+        --tty \
         --rm \
         --volume /opt/Sofics/shell_gpt/gpt-cache:/tmp/shell_gpt \
         --env SHELL_NAME="$(whoami)" \
