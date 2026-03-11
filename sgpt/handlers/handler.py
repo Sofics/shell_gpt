@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 from typing import Any, Callable, Dict, Generator, List, Optional
 
 from ..cache import Cache
@@ -47,6 +49,20 @@ def _uses_ollama_backend(model: str) -> bool:
     if _is_ollama_model(model):
         return True
     return base_url != "default" and "/" not in model
+
+
+def _ollama_model_name(model: str) -> str:
+    return model.removeprefix("ollama/")
+
+
+def _ollama_chat_url() -> str:
+    if base_url.endswith("/api/chat"):
+        return base_url
+    if base_url.endswith("/api"):
+        return f"{base_url}/chat"
+    if base_url.endswith("/"):
+        return f"{base_url}api/chat"
+    return f"{base_url}/api/chat"
 
 
 class Handler:
@@ -128,12 +144,22 @@ class Handler:
             functions = None
 
         use_ollama_backend = _uses_ollama_backend(model)
+        if use_ollama_backend:
+            yield from self._get_ollama_completion(
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                messages=messages,
+                functions=functions,
+            )
+            return
+
         request_kwargs: Dict[str, Any] = {
             "model": model,
             "temperature": temperature,
             "top_p": top_p,
             "messages": messages,
-            "stream": not use_ollama_backend,
+            "stream": True,
             **additional_kwargs,
         }
         if functions:
@@ -141,34 +167,7 @@ class Handler:
             request_kwargs["tools"] = functions
             request_kwargs["parallel_tool_calls"] = False
 
-        if use_ollama_backend:
-            request_kwargs["think"] = False
-
         response = completion(**request_kwargs)
-        if use_ollama_backend:
-            message = response.choices[0].message
-            tool_calls = getattr(message, "tool_calls", None)
-            if tool_calls:
-                tool_call = tool_calls[0]
-                tool_call_id = getattr(tool_call, "id", "")
-                function = getattr(tool_call, "function", None)
-                name = getattr(function, "name", "")
-                arguments = getattr(function, "arguments", "")
-                yield from self.handle_function_call(
-                    messages, tool_call_id, name, arguments
-                )
-                yield from self.get_completion(
-                    model=model,
-                    temperature=temperature,
-                    top_p=top_p,
-                    messages=messages,
-                    functions=functions,
-                    caching=False,
-                )
-                return
-
-            yield message.content or ""
-            return
 
         try:
             for chunk in response:
@@ -210,6 +209,75 @@ class Handler:
                 yield delta.content or ""
         except KeyboardInterrupt:
             response.close()
+
+    def _get_ollama_completion(
+        self,
+        model: str,
+        temperature: float,
+        top_p: float,
+        messages: List[Dict[str, Any]],
+        functions: Optional[List[Dict[str, str]]],
+    ) -> Generator[str, None, None]:
+        payload: Dict[str, Any] = {
+            "model": _ollama_model_name(model),
+            "messages": messages,
+            "stream": True,
+            "think": False,
+            "options": {"temperature": temperature, "top_p": top_p},
+        }
+        if functions:
+            payload["tools"] = functions
+
+        headers = {"Content-Type": "application/json"}
+        api_key = cfg.get("OPENAI_API_KEY")
+        parsed_url = urlparse(base_url)
+        if api_key and parsed_url.hostname and "ollama.com" in parsed_url.hostname:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        request = Request(
+            _ollama_chat_url(),
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+
+        tool_calls: List[Dict[str, Any]] = []
+        with urlopen(request, timeout=self.timeout) as response:
+            for raw_line in response:
+                line = raw_line.decode("utf-8").strip()
+                if not line:
+                    continue
+                chunk = json.loads(line)
+                message = chunk.get("message", {})
+
+                chunk_tool_calls = message.get("tool_calls") or []
+                if chunk_tool_calls:
+                    tool_calls.extend(chunk_tool_calls)
+
+                content = message.get("content") or ""
+                if content:
+                    yield content
+
+        if tool_calls:
+            tool_call = tool_calls[0]
+            function = tool_call.get("function", {})
+            arguments = function.get("arguments", "")
+            if not isinstance(arguments, str):
+                arguments = json.dumps(arguments)
+            yield from self.handle_function_call(
+                messages,
+                tool_call.get("id", "ollama-tool-call"),
+                function.get("name", ""),
+                arguments,
+            )
+            yield from self.get_completion(
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                messages=messages,
+                functions=functions,
+                caching=False,
+            )
 
     def handle(
         self,
