@@ -41,6 +41,14 @@ def _is_ollama_model(model: str) -> bool:
     return model.startswith("ollama/")
 
 
+def _uses_ollama_backend(model: str) -> bool:
+    if not use_litellm:
+        return False
+    if _is_ollama_model(model):
+        return True
+    return base_url != "default" and "/" not in model
+
+
 class Handler:
     cache = Cache(int(cfg.get("CACHE_LENGTH")), Path(cfg.get("CACHE_PATH")))
 
@@ -119,23 +127,48 @@ class Handler:
         if is_shell_role or is_code_role or is_dsc_shell_role:
             functions = None
 
-        if functions:
-            additional_kwargs["tool_choice"] = "auto"
-            additional_kwargs["tools"] = functions
-            additional_kwargs["parallel_tool_calls"] = False
-
+        use_ollama_backend = _uses_ollama_backend(model)
         request_kwargs: Dict[str, Any] = {
             "model": model,
             "temperature": temperature,
             "top_p": top_p,
             "messages": messages,
-            "stream": True,
+            "stream": not use_ollama_backend,
             **additional_kwargs,
         }
-        if use_litellm and _is_ollama_model(model):
+        if functions:
+            request_kwargs["tool_choice"] = "auto"
+            request_kwargs["tools"] = functions
+            request_kwargs["parallel_tool_calls"] = False
+
+        if use_ollama_backend:
             request_kwargs["think"] = False
 
         response = completion(**request_kwargs)
+        if use_ollama_backend:
+            message = response.choices[0].message
+            tool_calls = getattr(message, "tool_calls", None)
+            if tool_calls:
+                tool_call = tool_calls[0]
+                tool_call_id = getattr(tool_call, "id", "")
+                function = getattr(tool_call, "function", None)
+                name = getattr(function, "name", "")
+                arguments = getattr(function, "arguments", "")
+                yield from self.handle_function_call(
+                    messages, tool_call_id, name, arguments
+                )
+                yield from self.get_completion(
+                    model=model,
+                    temperature=temperature,
+                    top_p=top_p,
+                    messages=messages,
+                    functions=functions,
+                    caching=False,
+                )
+                return
+
+            yield message.content or ""
+            return
 
         try:
             for chunk in response:
