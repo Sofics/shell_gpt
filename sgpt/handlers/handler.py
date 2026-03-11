@@ -37,6 +37,10 @@ else:
     additional_kwargs = {}
 
 
+def _is_ollama_model(model: str) -> bool:
+    return model.startswith("ollama/")
+
+
 class Handler:
     cache = Cache(int(cfg.get("CACHE_LENGTH")), Path(cfg.get("CACHE_PATH")))
 
@@ -120,14 +124,18 @@ class Handler:
             additional_kwargs["tools"] = functions
             additional_kwargs["parallel_tool_calls"] = False
 
-        response = completion(
-            model=model,
-            temperature=temperature,
-            top_p=top_p,
-            messages=messages,
-            stream=True,
+        request_kwargs: Dict[str, Any] = {
+            "model": model,
+            "temperature": temperature,
+            "top_p": top_p,
+            "messages": messages,
+            "stream": True,
             **additional_kwargs,
-        )
+        }
+        if use_litellm and _is_ollama_model(model):
+            request_kwargs["think"] = False
+
+        response = completion(**request_kwargs)
 
         try:
             for chunk in response:
